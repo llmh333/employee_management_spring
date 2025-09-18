@@ -54,6 +54,7 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<?> handleException(Exception ex) {
+        ex.printStackTrace();
         String message = messageSource.getMessage(ErrorMessage.INTERNAL_SERVER_ERROR, null, LocaleContextHolder.getLocale());
         return  ApiResponseUtil.error(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
