@@ -19,6 +19,7 @@ public class RegisterUserRequestDto {
     private String username;
 
     @NotNull(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
+    @Pattern(regexp = "^[a-zA-Z0-9]{6,}$", message = ErrorMessage.Validation.PASSWORD)
     private String password;
 
     @NotBlank(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
