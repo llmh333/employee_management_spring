@@ -1,5 +1,7 @@
 package com.hit.employee_management_spring.security;
 
+import com.hit.employee_management_spring.constant.ErrorMessage;
+import com.hit.employee_management_spring.exception.BadRequestException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -7,10 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +40,7 @@ public class JwtTokenProvider {
                     .subject(userPrincipal.getUsername())
                     .issuedAt(new Date(new Date().getTime()))
                     .issuer("leminhi")
-                    .expiration(new Date(System.currentTimeMillis() + EXPIRED_REFRESH_TOKEN * 60 * 1000L))
+                    .expiration(new Date(System.currentTimeMillis() + EXPIRED_REFRESH_TOKEN * 24 * 60 * 1000L))
                     .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                     .claims(claims)
                     .compact();
@@ -52,7 +50,7 @@ public class JwtTokenProvider {
                 .subject(userPrincipal.getUsername())
                 .issuedAt(new Date(new Date().getTime()))
                 .issuer("leminhi")
-                .expiration(new Date(System.currentTimeMillis() + EXPIRED_ACCESS_TOKEN * 60 * 1000L))
+                .expiration(new Date(System.currentTimeMillis() + EXPIRED_ACCESS_TOKEN * 24 * 60 * 1000L))
                 .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                 .claims(claims)
                 .compact();
@@ -70,9 +68,9 @@ public class JwtTokenProvider {
         try {
             Jwts.parser().verifyWith(getSecretKey()).build().parseSignedClaims(token);
             return true;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return false;
+        catch (Exception e) {
+            throw new BadRequestException(ErrorMessage.Auth.UNAUTHENTICATED);
+        }
     }
 }

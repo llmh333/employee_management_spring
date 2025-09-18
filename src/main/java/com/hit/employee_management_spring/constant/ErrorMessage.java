@@ -21,5 +21,6 @@ public class ErrorMessage {
 
     public static class Auth {
         public static final String USERNAME_OR_PASSWORD_WRONG = "exception.auth.username.or.password.wrong";
+        public static final String UNAUTHENTICATED = "exception.auth.unauthenticated";
     }
 }
