@@ -15,5 +15,11 @@ public class ErrorMessage {
     public static class User {
         public static final String USERNAME_ALREADY_EXIST = "exception.already.exist.username";
         public static final String EMAIL_ALREADY_EXIST = "exception.already.exist.email";
+        public static final String NOT_FOUND_BY_USERNAME = "exception.user.not.found.username";
+        public static final String NOT_FOUND_BY_EMAIL = "exception.user.not.found.email";
+    }
+
+    public static class Auth {
+        public static final String USERNAME_OR_PASSWORD_WRONG = "exception.auth.username.or.password.wrong";
     }
 }

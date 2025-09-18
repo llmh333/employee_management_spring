@@ -39,6 +39,13 @@ public class GlobalHandlerException {
         return ApiResponseUtil.error(message, ex.getStatus());
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> handleNotFoundException(NotFoundException ex) {
+
+        String message = messageSource.getMessage(ex.getMessage(), ex.getParams(), LocaleContextHolder.getLocale());
+        return ApiResponseUtil.error(message, ex.getStatus());
+    }
+
     @ExceptionHandler(value = BadRequestException.class)
     public ResponseEntity<?> handleBadRequestException(BadRequestException ex) {
         String message = messageSource.getMessage(ex.getMessage(), ex.getParams(), LocaleContextHolder.getLocale());

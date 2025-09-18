@@ -6,10 +6,12 @@ public class UrlConstant {
 
     public static class Auth {
         public static final String PRE_FIX = "/auth";
+        public static final String LOGIN = PRE_FIX + "/login";
         public static final String REGISTER = PRE_FIX + "/register";
     }
 
     public static final String[] PUBLIC_END_POINTS = {
+            BASE_URL + Auth.LOGIN,
             BASE_URL + Auth.REGISTER
     };
 }
