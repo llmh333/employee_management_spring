@@ -89,4 +89,15 @@ public class IUserServiceImpl implements IUserService {
 
         return null;
     }
+
+    @Override
+    public boolean deleteByUserId(String userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{userId});
+        }
+
+        userRepository.deleteById(userId);
+
+        return true;
+    }
 }

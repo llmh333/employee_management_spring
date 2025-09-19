@@ -1,9 +1,10 @@
 package com.hit.employee_management_spring.domain.entity;
 
 import com.hit.employee_management_spring.audit.DateAuditing;
-import com.hit.employee_management_spring.audit.FullAuditing;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 
 @Entity
@@ -27,5 +28,6 @@ public class UserSession extends DateAuditing {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

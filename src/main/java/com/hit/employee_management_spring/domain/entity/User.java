@@ -4,6 +4,8 @@ import com.hit.employee_management_spring.audit.DateAuditing;
 import com.hit.employee_management_spring.constant.Gender;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.List;
 
@@ -45,6 +47,6 @@ public class User extends DateAuditing {
     )
     private List<Role> roles;
 
-    @OneToMany(mappedBy = "id", fetch = FetchType.LAZY, orphanRemoval = true,  cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserSession> userSessions;
 }
