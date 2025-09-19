@@ -22,5 +22,9 @@ public class ErrorMessage {
     public static class Auth {
         public static final String USERNAME_OR_PASSWORD_WRONG = "exception.auth.username.or.password.wrong";
         public static final String UNAUTHENTICATED = "exception.auth.unauthenticated";
+        public static final String DELAY_GET_OTP = "exception.auth.delay.get.otp";
+        public static final String OTP_CODE_NOT_FOUND = "exception.auth.otp.code.not.found";
+        public static final String OLD_PASSWORD_WRONG = "exception.auth.old.password.wrong";
+        public static final String BOTH_NEW_PASSWORD_NOT_MATCH = "exception.auth.both.password.not.match";
     }
 }

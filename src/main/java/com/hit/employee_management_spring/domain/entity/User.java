@@ -1,5 +1,6 @@
 package com.hit.employee_management_spring.domain.entity;
 
+import com.hit.employee_management_spring.audit.DateAuditing;
 import com.hit.employee_management_spring.constant.Gender;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User extends DateAuditing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,4 +44,7 @@ public class User {
 
     )
     private List<Role> roles;
+
+    @OneToMany(mappedBy = "id", fetch = FetchType.LAZY, orphanRemoval = true,  cascade = CascadeType.ALL)
+    private List<UserSession> userSessions;
 }
