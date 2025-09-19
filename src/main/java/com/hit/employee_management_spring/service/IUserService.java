@@ -10,4 +10,6 @@ public interface IUserService {
     public UserResponseDto changePassword(String email, String newPassword, String confirmNewPassword);
 
     public boolean deleteByUserId(String userId);
+
+    public UserResponseDto getUserById(String userId);
 }
