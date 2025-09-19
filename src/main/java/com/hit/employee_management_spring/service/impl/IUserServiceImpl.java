@@ -100,4 +100,14 @@ public class IUserServiceImpl implements IUserService {
 
         return true;
     }
+
+    @Override
+    public UserResponseDto getUserById(String userId) {
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{userId})
+        );
+
+        return userMapper.toUserResponseDto(user);
+    }
 }
