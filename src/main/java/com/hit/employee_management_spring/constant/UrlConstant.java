@@ -18,11 +18,22 @@ public class UrlConstant {
         public static final String CONFIRM_NEW_PASSWORD = PRE_FIX + "/confirm-new-password";
     }
 
+    public static class User {
+        public static final String PRE_FIX = "/users";
+        public static final String ADD_NEW_USER = PRE_FIX;
+        public static final String UPDATE_USER = PRE_FIX;
+        public static final String DELETE_USER_BY_ID = PRE_FIX + "/{userId}";
+        public static final String GET_ALL_USER = PRE_FIX;
+        public static final String GET_USER_BY_ID = PRE_FIX + "/{userId}";
+    }
+
     public static final String[] PUBLIC_END_POINTS = {
             BASE_URL + Auth.LOGIN,
             BASE_URL + Auth.REGISTER,
             BASE_URL + ForgotPassword.GET_OTP_CODE,
             BASE_URL + ForgotPassword.VERIFY_OTP_CODE,
-            BASE_URL + ForgotPassword.CONFIRM_NEW_PASSWORD
+            BASE_URL + ForgotPassword.CONFIRM_NEW_PASSWORD,
+
+            BASE_URL + User.ADD_NEW_USER
     };
 }
