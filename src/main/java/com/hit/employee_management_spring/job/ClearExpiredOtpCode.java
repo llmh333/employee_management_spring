@@ -15,7 +15,7 @@ public class ClearExpiredOtpCode {
 
     private final OtpForgotPasswordRepository otpForgotPasswordRepository;
 
-    @Scheduled(cron = "*/30 * * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     public void deleteExpiredOtpCode() {
         log.info("Deleting expired OTP Code");
         otpForgotPasswordRepository.deleteExpiredOtpCode();
