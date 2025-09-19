@@ -17,6 +17,8 @@ public class ErrorMessage {
         public static final String EMAIL_ALREADY_EXIST = "exception.already.exist.email";
         public static final String NOT_FOUND_BY_USERNAME = "exception.user.not.found.username";
         public static final String NOT_FOUND_BY_EMAIL = "exception.user.not.found.email";
+        public static final String NOT_FOUND_BY_ID = "exception.user.not.found.id";
+
     }
 
     public static class Auth {

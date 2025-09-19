@@ -8,4 +8,6 @@ public interface IUserService {
     public UserResponseDto addNewUser(RegisterUserRequestDto requestDto);
 
     public UserResponseDto changePassword(String email, String newPassword, String confirmNewPassword);
+
+    public boolean deleteByUserId(String userId);
 }
