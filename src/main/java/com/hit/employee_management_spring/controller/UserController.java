@@ -5,6 +5,8 @@ import com.hit.employee_management_spring.base.RestApiV1;
 import com.hit.employee_management_spring.constant.ErrorMessage;
 import com.hit.employee_management_spring.constant.UrlConstant;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
 import com.hit.employee_management_spring.service.IUserService;
 import jakarta.validation.Valid;
@@ -25,6 +27,12 @@ public class UserController {
     @GetMapping(UrlConstant.User.GET_USER_BY_ID)
     public ResponseEntity<?> getUserById(@PathVariable String userId) {
         UserResponseDto responseDto = userService.getUserById(userId);
+        return ApiResponseUtil.success(responseDto);
+    }
+
+    @GetMapping(UrlConstant.User.GET_ALL_USER)
+    public ResponseEntity<?> getAllUser(@Valid PaginationFullRequestDto requestDto) {
+        PaginationResponseDto responseDto = userService.getAllUser(requestDto);
         return ApiResponseUtil.success(responseDto);
     }
 
