@@ -1,14 +1,12 @@
 package com.hit.employee_management_spring.service.impl;
 
-import com.hit.employee_management_spring.constant.ErrorMessage;
-import com.hit.employee_management_spring.constant.SortByConstant;
-import com.hit.employee_management_spring.constant.SortType;
-import com.hit.employee_management_spring.constant.TypeToken;
+import com.hit.employee_management_spring.constant.*;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PagingMetadata;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
+import com.hit.employee_management_spring.domain.entity.Role;
 import com.hit.employee_management_spring.domain.entity.TokenBlacklist;
 import com.hit.employee_management_spring.domain.entity.User;
 import com.hit.employee_management_spring.domain.entity.UserSession;
@@ -16,6 +14,7 @@ import com.hit.employee_management_spring.domain.mapper.UserMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
 import com.hit.employee_management_spring.exception.NotFoundException;
+import com.hit.employee_management_spring.repository.RoleRepository;
 import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import com.hit.employee_management_spring.repository.UserSessionRepository;
@@ -30,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -41,6 +41,7 @@ public class IUserServiceImpl implements IUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserSessionRepository userSessionRepository;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
 
     @Override
@@ -57,8 +58,13 @@ public class IUserServiceImpl implements IUserService {
             throw new BadRequestException(ErrorMessage.Validation.PASSWORD_NOT_MATCH);
         }
 
+        Role defaultRole = roleRepository.findByName(RoleConstant.ROLE_USER.name());
+        List<Role> roles = new ArrayList<>();
+        roles.add(defaultRole);
+
         User newUser = userMapper.toUser(requestDto);
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        newUser.setRoles(roles);
 
         return userMapper.toUserResponseDto(userRepository.save(newUser));
     }
