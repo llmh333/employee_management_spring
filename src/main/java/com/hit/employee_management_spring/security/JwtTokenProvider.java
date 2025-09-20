@@ -1,17 +1,20 @@
 package com.hit.employee_management_spring.security;
 
 import com.hit.employee_management_spring.constant.ErrorMessage;
+import com.hit.employee_management_spring.constant.TypeToken;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
@@ -32,8 +35,13 @@ public class JwtTokenProvider {
     public String generateToken(UserPrincipal userPrincipal, boolean isRefreshToken) {
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("authorities", userPrincipal.getAuthorities());
+
+        String authorities = userPrincipal.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.joining(","));
+        claims.put("authorities", authorities);
         claims.put("email", userPrincipal.getEmail());
+        claims.put("type_token", isRefreshToken ? TypeToken.REFRESH_TOKEN : TypeToken.ACCESS_TOKEN);
 
         if (isRefreshToken) {
             return Jwts.builder()
