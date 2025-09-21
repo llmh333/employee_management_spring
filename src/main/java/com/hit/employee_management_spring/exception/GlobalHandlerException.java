@@ -1,12 +1,16 @@
 package com.hit.employee_management_spring.exception;
 
 import com.hit.employee_management_spring.base.ApiResponseUtil;
+import com.hit.employee_management_spring.base.RestData;
 import com.hit.employee_management_spring.constant.ErrorMessage;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,6 +23,12 @@ import java.util.Map;
 public class GlobalHandlerException {
 
     private final MessageSource messageSource;
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<?> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        String message = messageSource.getMessage(ErrorMessage.FORBIDDEN, null, LocaleContextHolder.getLocale());
+        return ApiResponseUtil.error(message, HttpStatus.FORBIDDEN);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
