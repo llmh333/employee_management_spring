@@ -14,11 +14,13 @@ import com.hit.employee_management_spring.domain.entity.UserSession;
 import com.hit.employee_management_spring.domain.mapper.UserMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
+import com.hit.employee_management_spring.exception.ForbiddenException;
 import com.hit.employee_management_spring.exception.NotFoundException;
 import com.hit.employee_management_spring.repository.RoleRepository;
 import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import com.hit.employee_management_spring.repository.UserSessionRepository;
+import com.hit.employee_management_spring.security.UserPrincipal;
 import com.hit.employee_management_spring.service.IUserService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -80,6 +84,11 @@ public class IUserServiceImpl implements IUserService {
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_EMAIL, new String[]{email});
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!user.getId().equals(userPrincipal.getId())) {
+            throw new ForbiddenException(ErrorMessage.FORBIDDEN);
         }
 
         if (!newPassword.equals(confirmNewPassword)) {
