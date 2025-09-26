@@ -2,6 +2,7 @@ package com.hit.employee_management_spring.service.impl;
 
 import com.hit.employee_management_spring.constant.*;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.UpdateUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PagingMetadata;
@@ -19,6 +20,7 @@ import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import com.hit.employee_management_spring.repository.UserSessionRepository;
 import com.hit.employee_management_spring.service.IUserService;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -27,10 +29,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.hit.employee_management_spring.constant.ErrorMessage.Validation.FIELD_NOT_BLANK;
 
 @Service
 @RequiredArgsConstructor
@@ -154,5 +159,33 @@ public class IUserServiceImpl implements IUserService {
         pagingMetadata.setSortType(requestDto.getIsAscending() ? SortType.ASC.name() : SortType.DESC.name());
 
         return new PaginationResponseDto(pagingMetadata, userResponseDtoList);
+    }
+
+    @Override
+    public UserResponseDto updateUser(UpdateUserRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getId()).orElseThrow(
+                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{requestDto.getId()})
+        );
+
+        if (!requestDto.getFirstName().trim().isEmpty()) {
+            user.setFirstName(requestDto.getFirstName());
+        }
+
+        if (!requestDto.getLastName().trim().isEmpty()) {
+            user.setLastName(requestDto.getLastName());
+        }
+
+        if (!requestDto.getGender().trim().isEmpty()) {
+            if (Gender.FEMALE.name().equals(requestDto.getGender())) {
+                user.setGender(Gender.FEMALE);
+            } else if (Gender.MALE.name().equals(requestDto.getGender())) {
+                user.setGender(Gender.MALE);
+            } else {
+                user.setGender(Gender.OTHER);
+            }
+        }
+
+        return userMapper.toUserResponseDto(userRepository.save(user));
+
     }
 }

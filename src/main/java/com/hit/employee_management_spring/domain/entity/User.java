@@ -23,13 +23,13 @@ public class User extends DateAuditing {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(columnDefinition = "varchar(100)", nullable = false, unique = true)
+    @Column(columnDefinition = "varchar(100)", nullable = false, unique = true, updatable = false)
     private String username;
 
     @Column(columnDefinition = "varchar(255)", nullable = false)
     private String password;
 
-    @Column(columnDefinition = "varchar(255)", nullable = false, unique = true)
+    @Column(columnDefinition = "varchar(255)", nullable = false, unique = true, updatable = false)
     private String email;
 
     private String firstName;

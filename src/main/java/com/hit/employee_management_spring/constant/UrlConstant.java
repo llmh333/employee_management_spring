@@ -34,7 +34,5 @@ public class UrlConstant {
             BASE_URL + ForgotPassword.VERIFY_OTP_CODE,
             BASE_URL + ForgotPassword.CONFIRM_NEW_PASSWORD,
 
-            BASE_URL + User.ADD_NEW_USER,
-            BASE_URL + User.DELETE_USER_BY_ID
     };
 }
