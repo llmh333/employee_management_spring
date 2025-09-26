@@ -11,6 +11,7 @@ import com.hit.employee_management_spring.domain.dto.request.pagination.Paginati
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
 import com.hit.employee_management_spring.service.IUserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -55,8 +56,9 @@ public class UserController {
     }
 
     @PutMapping(UrlConstant.User.UPDATE_USER)
-    public ResponseEntity<?> updateUser(@RequestBody @Valid UpdateUserRequestDto requestDto) {
-        UserResponseDto userResponseDto = userService.updateUser(requestDto);
+    public ResponseEntity<?> updateUser(@PathVariable String userId,
+                                        @RequestBody @Valid UpdateUserRequestDto requestDto) {
+        UserResponseDto userResponseDto = userService.updateUser(userId, requestDto);
         return ApiResponseUtil.success(userResponseDto, HttpStatus.OK);
     }
 }

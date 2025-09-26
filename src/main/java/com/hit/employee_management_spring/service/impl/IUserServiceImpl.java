@@ -171,9 +171,9 @@ public class IUserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserResponseDto updateUser(UpdateUserRequestDto requestDto) {
-        User user = userRepository.findById(requestDto.getId()).orElseThrow(
-                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{requestDto.getId()})
+    public UserResponseDto updateUser(String userId, UpdateUserRequestDto requestDto) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{userId})
         );
 
         if (!requestDto.getFirstName().trim().isEmpty()) {

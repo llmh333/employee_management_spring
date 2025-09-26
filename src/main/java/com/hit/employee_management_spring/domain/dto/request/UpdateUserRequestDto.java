@@ -13,9 +13,6 @@ import lombok.Setter;
 public class UpdateUserRequestDto {
 
     @NotBlank(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
-    private String id;
-
-    @NotBlank(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
     private String firstName;
 
     @NotBlank(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
