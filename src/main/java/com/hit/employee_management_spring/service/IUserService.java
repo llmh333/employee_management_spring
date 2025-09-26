@@ -5,6 +5,7 @@ import com.hit.employee_management_spring.domain.dto.request.UpdateUserRequestDt
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 public interface IUserService {
@@ -23,5 +24,6 @@ public interface IUserService {
     @PreAuthorize("hasRole('ADMIN')")
     public PaginationResponseDto getAllUser(PaginationFullRequestDto requestDto);
 
-    public UserResponseDto updateUser(UpdateUserRequestDto requestDto);
+    @PreAuthorize("#userId == authentication.principal.id")
+    public UserResponseDto updateUser(String userId, UpdateUserRequestDto requestDto);
 }
