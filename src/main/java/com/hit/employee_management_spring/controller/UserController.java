@@ -5,6 +5,7 @@ import com.hit.employee_management_spring.base.RestApiV1;
 import com.hit.employee_management_spring.constant.ErrorMessage;
 import com.hit.employee_management_spring.constant.UrlConstant;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.UpdateUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
@@ -51,5 +52,11 @@ public class UserController {
             return ApiResponseUtil.error(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return ApiResponseUtil.success(null, HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping(UrlConstant.User.UPDATE_USER)
+    public ResponseEntity<?> updateUser(@RequestBody @Valid UpdateUserRequestDto requestDto) {
+        UserResponseDto userResponseDto = userService.updateUser(requestDto);
+        return ApiResponseUtil.success(userResponseDto, HttpStatus.OK);
     }
 }

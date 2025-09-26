@@ -1,36 +1,45 @@
 package com.hit.employee_management_spring.service.impl;
 
-import com.hit.employee_management_spring.constant.ErrorMessage;
-import com.hit.employee_management_spring.constant.SortByConstant;
-import com.hit.employee_management_spring.constant.SortType;
-import com.hit.employee_management_spring.constant.TypeToken;
+import com.hit.employee_management_spring.constant.*;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.UpdateUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PagingMetadata;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
+import com.hit.employee_management_spring.domain.entity.Role;
 import com.hit.employee_management_spring.domain.entity.TokenBlacklist;
 import com.hit.employee_management_spring.domain.entity.User;
 import com.hit.employee_management_spring.domain.entity.UserSession;
 import com.hit.employee_management_spring.domain.mapper.UserMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
+import com.hit.employee_management_spring.exception.ForbiddenException;
 import com.hit.employee_management_spring.exception.NotFoundException;
+import com.hit.employee_management_spring.repository.RoleRepository;
 import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import com.hit.employee_management_spring.repository.UserSessionRepository;
+import com.hit.employee_management_spring.security.UserPrincipal;
 import com.hit.employee_management_spring.service.IUserService;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.hit.employee_management_spring.constant.ErrorMessage.Validation.FIELD_NOT_BLANK;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +50,7 @@ public class IUserServiceImpl implements IUserService {
     private final PasswordEncoder passwordEncoder;
     private final UserSessionRepository userSessionRepository;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
 
     @Override
@@ -57,8 +67,13 @@ public class IUserServiceImpl implements IUserService {
             throw new BadRequestException(ErrorMessage.Validation.PASSWORD_NOT_MATCH);
         }
 
+        Role defaultRole = roleRepository.findByName(RoleConstant.ROLE_USER.name());
+        List<Role> roles = new ArrayList<>();
+        roles.add(defaultRole);
+
         User newUser = userMapper.toUser(requestDto);
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        newUser.setRoles(roles);
 
         return userMapper.toUserResponseDto(userRepository.save(newUser));
     }
@@ -69,6 +84,11 @@ public class IUserServiceImpl implements IUserService {
         User user = userRepository.findByEmail(email);
         if (user == null) {
             throw new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_EMAIL, new String[]{email});
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!user.getId().equals(userPrincipal.getId())) {
+            throw new ForbiddenException(ErrorMessage.FORBIDDEN);
         }
 
         if (!newPassword.equals(confirmNewPassword)) {
@@ -148,5 +168,33 @@ public class IUserServiceImpl implements IUserService {
         pagingMetadata.setSortType(requestDto.getIsAscending() ? SortType.ASC.name() : SortType.DESC.name());
 
         return new PaginationResponseDto(pagingMetadata, userResponseDtoList);
+    }
+
+    @Override
+    public UserResponseDto updateUser(UpdateUserRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getId()).orElseThrow(
+                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{requestDto.getId()})
+        );
+
+        if (!requestDto.getFirstName().trim().isEmpty()) {
+            user.setFirstName(requestDto.getFirstName());
+        }
+
+        if (!requestDto.getLastName().trim().isEmpty()) {
+            user.setLastName(requestDto.getLastName());
+        }
+
+        if (!requestDto.getGender().trim().isEmpty()) {
+            if (Gender.FEMALE.name().equals(requestDto.getGender())) {
+                user.setGender(Gender.FEMALE);
+            } else if (Gender.MALE.name().equals(requestDto.getGender())) {
+                user.setGender(Gender.MALE);
+            } else {
+                user.setGender(Gender.OTHER);
+            }
+        }
+
+        return userMapper.toUserResponseDto(userRepository.save(user));
+
     }
 }

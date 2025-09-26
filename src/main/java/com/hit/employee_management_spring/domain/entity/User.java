@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,13 +23,13 @@ public class User extends DateAuditing {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(columnDefinition = "varchar(100)", nullable = false, unique = true)
+    @Column(columnDefinition = "varchar(100)", nullable = false, unique = true, updatable = false)
     private String username;
 
     @Column(columnDefinition = "varchar(255)", nullable = false)
     private String password;
 
-    @Column(columnDefinition = "varchar(255)", nullable = false, unique = true)
+    @Column(columnDefinition = "varchar(255)", nullable = false, unique = true, updatable = false)
     private String email;
 
     private String firstName;
@@ -45,7 +46,7 @@ public class User extends DateAuditing {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id", table = "roles")
 
     )
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
 
     @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserSession> userSessions;

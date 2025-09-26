@@ -1,17 +1,20 @@
 package com.hit.employee_management_spring.service.impl;
 
 import com.hit.employee_management_spring.constant.ErrorMessage;
+import com.hit.employee_management_spring.constant.RoleConstant;
 import com.hit.employee_management_spring.constant.TypeToken;
 import com.hit.employee_management_spring.domain.dto.request.LoginRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.response.LoginResponseDto;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
+import com.hit.employee_management_spring.domain.entity.Role;
 import com.hit.employee_management_spring.domain.entity.TokenBlacklist;
 import com.hit.employee_management_spring.domain.entity.User;
 import com.hit.employee_management_spring.domain.entity.UserSession;
 import com.hit.employee_management_spring.domain.mapper.UserMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
+import com.hit.employee_management_spring.repository.RoleRepository;
 import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import com.hit.employee_management_spring.repository.UserSessionRepository;
@@ -33,6 +36,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,6 +48,7 @@ public class IAuthServiceImpl implements IAuthService {
     private final UserRepository userRepository;
     private final UserSessionRepository userSessionRepository;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -63,9 +69,13 @@ public class IAuthServiceImpl implements IAuthService {
             throw new BadRequestException(ErrorMessage.Validation.PASSWORD_NOT_MATCH);
         }
 
+        Role defaultRole = roleRepository.findByName(RoleConstant.ROLE_USER.name());
+        List<Role> roles = new ArrayList<>();
+        roles.add(defaultRole);
+
         User newUser = userMapper.toUser(requestDto);
-        log.info("password: {}", requestDto.getPassword());
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        newUser.setRoles(roles);
 
         return userMapper.toUserResponseDto(userRepository.save(newUser));
     }
