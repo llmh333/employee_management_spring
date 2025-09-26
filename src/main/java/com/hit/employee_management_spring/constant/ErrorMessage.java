@@ -3,6 +3,7 @@ package com.hit.employee_management_spring.constant;
 public class ErrorMessage {
 
     public static final String INTERNAL_SERVER_ERROR = "exception.internal.server";
+    public static final String FORBIDDEN = "exception.forbidden";
 
     public static class Validation {
         public static final String USERNAME = "exception.validation.username";

@@ -1,6 +1,8 @@
 package com.hit.employee_management_spring.config;
 
 import com.hit.employee_management_spring.constant.UrlConstant;
+import com.hit.employee_management_spring.security.AccessDeniedExceptionHandler;
+import com.hit.employee_management_spring.security.AuthenticationEntryPointHandler;
 import com.hit.employee_management_spring.security.JwtAuthenticationFilterChain;
 import com.hit.employee_management_spring.service.ICustomUserDetailService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -22,11 +25,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
     private final ICustomUserDetailService customUserDetailService;
     private final JwtAuthenticationFilterChain jwtAuthenticationFilterChain;
+    private final AccessDeniedExceptionHandler accessDeniedExceptionHandler;
+    private final AuthenticationEntryPointHandler authenticationEntryPointHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -55,6 +61,11 @@ public class WebSecurityConfig {
                         .requestMatchers(UrlConstant.PUBLIC_END_POINTS).permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilterChain, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> {
+                    exception
+                            .accessDeniedHandler(accessDeniedExceptionHandler)
+                            .authenticationEntryPoint(authenticationEntryPointHandler);
+                })
                 .build();
     }
 }
