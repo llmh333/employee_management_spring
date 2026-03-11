@@ -48,7 +48,7 @@ public class JwtTokenProvider {
                     .subject(userPrincipal.getUsername())
                     .issuedAt(new Date(new Date().getTime()))
                     .issuer("leminhi")
-                    .expiration(new Date(System.currentTimeMillis() + EXPIRED_REFRESH_TOKEN * 24 * 60 * 1000L))
+                    .expiration(new Date(System.currentTimeMillis() + EXPIRED_REFRESH_TOKEN * 24L * 60 * 60 * 1000))
                     .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                     .claims(claims)
                     .compact();
@@ -58,7 +58,7 @@ public class JwtTokenProvider {
                 .subject(userPrincipal.getUsername())
                 .issuedAt(new Date(new Date().getTime()))
                 .issuer("leminhi")
-                .expiration(new Date(System.currentTimeMillis() + EXPIRED_ACCESS_TOKEN * 24 * 60 * 1000L))
+                .expiration(new Date(System.currentTimeMillis() + EXPIRED_ACCESS_TOKEN * 24L * 60 * 60 * 1000))
                 .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                 .claims(claims)
                 .compact();
@@ -70,6 +70,17 @@ public class JwtTokenProvider {
 
     public String extractEmailByToken(String token) {
         return Jwts.parser().verifyWith(getSecretKey()).build().parseSignedClaims(token).getPayload().get("email").toString();
+    }
+
+    public long getRemainingTtlSeconds(String token) {
+        try {
+            Date expiration = Jwts.parser().verifyWith(getSecretKey()).build()
+                    .parseSignedClaims(token).getPayload().getExpiration();
+            long remaining = (expiration.getTime() - System.currentTimeMillis()) / 1000;
+            return Math.max(remaining, 0);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     public boolean validateToken(String token) {

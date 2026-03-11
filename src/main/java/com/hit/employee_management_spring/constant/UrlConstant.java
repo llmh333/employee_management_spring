@@ -27,6 +27,34 @@ public class UrlConstant {
         public static final String GET_USER_BY_ID = PRE_FIX + "/{userId}";
     }
 
+    public static class Department {
+        public static final String PRE_FIX = "/departments";
+        public static final String CREATE = PRE_FIX;
+        public static final String UPDATE = PRE_FIX;
+        public static final String DELETE = PRE_FIX + "/{id}";
+        public static final String GET_BY_ID = PRE_FIX + "/{id}";
+        public static final String GET_ALL = PRE_FIX;
+    }
+
+    public static class Position {
+        public static final String PRE_FIX = "/positions";
+        public static final String CREATE = PRE_FIX;
+        public static final String UPDATE = PRE_FIX;
+        public static final String DELETE = PRE_FIX + "/{id}";
+        public static final String GET_BY_ID = PRE_FIX + "/{id}";
+        public static final String GET_ALL = PRE_FIX;
+        public static final String GET_BY_DEPARTMENT = PRE_FIX + "/department/{departmentId}";
+    }
+
+    public static class Employee {
+        public static final String PRE_FIX = "/employees";
+        public static final String CREATE = PRE_FIX;
+        public static final String UPDATE = PRE_FIX;
+        public static final String DELETE = PRE_FIX + "/{id}";
+        public static final String GET_BY_ID = PRE_FIX + "/{id}";
+        public static final String GET_ALL = PRE_FIX;
+    }
+
     public static final String[] PUBLIC_END_POINTS = {
             BASE_URL + Auth.LOGIN,
             BASE_URL + Auth.REGISTER,

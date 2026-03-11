@@ -1,134 +1,129 @@
 package com.hit.employee_management_spring.service.impl;
 
-import com.fasterxml.jackson.annotation.ObjectIdGenerator;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.hit.employee_management_spring.constant.ErrorMessage;
+import com.hit.employee_management_spring.domain.cache.OtpCache;
+import com.hit.employee_management_spring.domain.cache.OtpTokenCache;
 import com.hit.employee_management_spring.domain.dto.request.ConfirmNewPasswordRequestDto;
 import com.hit.employee_management_spring.domain.dto.response.OtpResponseDto;
 import com.hit.employee_management_spring.domain.dto.response.VerifiedOtpCodeResponseDto;
-import com.hit.employee_management_spring.domain.entity.OtpForgotPassword;
 import com.hit.employee_management_spring.domain.entity.User;
-import com.hit.employee_management_spring.domain.mapper.OtpForgotPasswordMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
 import com.hit.employee_management_spring.exception.NotFoundException;
-import com.hit.employee_management_spring.repository.OtpForgotPasswordRepository;
+import com.hit.employee_management_spring.repository.OtpCacheRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
-import com.hit.employee_management_spring.security.JwtTokenProvider;
 import com.hit.employee_management_spring.service.IMailSenderService;
 import com.hit.employee_management_spring.service.IOtpForgotPasswordService;
 import com.hit.employee_management_spring.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.UUID;
-
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class IOtpForgotPasswordServiceImpl implements IOtpForgotPasswordService {
 
-    private final OtpForgotPasswordRepository  otpForgotPasswordRepository;
+    private static final long OTP_TTL_SECONDS = 300; // 5 minutes
+    private static final long TOKEN_TTL_SECONDS = 300; // 5 minutes
+
+    private final OtpCacheRepository otpCacheRepository;
     private final UserRepository userRepository;
     private final IMailSenderService mailSenderService;
     private final IUserService userService;
-    private final OtpForgotPasswordMapper otpForgotPasswordMapper;
 
     @Override
     public String generateOtpCode(User user) {
-
-        OtpForgotPassword otpForgotPassword = otpForgotPasswordRepository.findByUser(user);
-        if (otpForgotPassword != null) {
-            if (LocalDateTime.now().isAfter(otpForgotPassword.getExpiryDateOtpCode())) {
-                otpForgotPasswordRepository.delete(otpForgotPassword);
-            } else {
-                throw new DuplicateDataException(ErrorMessage.Auth.DELAY_GET_OTP, new String[]{otpForgotPassword.getExpiryDateOtpCode().toString()});
-            }
-
+        OtpCache existing = otpCacheRepository.getOtp(user.getEmail());
+        if (existing != null) {
+            throw new DuplicateDataException(ErrorMessage.Auth.DELAY_GET_OTP,
+                    new String[]{existing.getExpiryAt().toString()});
         }
-        log.info("Generating Otp Code for email: {} ", user.getEmail());
-        Random random = new Random();
-        random.setSeed(System.currentTimeMillis());
-        return String.valueOf(random.nextInt(999999));
+        SecureRandom secureRandom = new SecureRandom();
+        int otpInt = secureRandom.nextInt(900000) + 100000;
+        return String.valueOf(otpInt);
     }
 
     @Override
     public OtpResponseDto sendOtpCode(String receivedEmail) {
-
         User user = userRepository.findByEmail(receivedEmail);
         if (user == null) {
             throw new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_EMAIL, new String[]{receivedEmail});
         }
-
         String otp = generateOtpCode(user);
-        log.info("Generated OTP Code {} for email: {} ", otp, receivedEmail);
+        log.info("Generated OTP for email: {}", receivedEmail);
 
         String subject = "OTP Forgot Password";
-        String content = "The OTP Code is: " + otp;
-        boolean resultSendEmail = mailSenderService.sendMail(receivedEmail, subject, content);
-        if (resultSendEmail) {
-            OtpForgotPassword newOtpForgotPassword = new OtpForgotPassword();
-            newOtpForgotPassword.setOtpCode(otp);
-            newOtpForgotPassword.setExpiryDateOtpCode(LocalDateTime.now().plusMinutes(5));
-            newOtpForgotPassword.setVerifiedOtpCode(false);
-            newOtpForgotPassword.setUser(user);
-            otpForgotPasswordRepository.save(newOtpForgotPassword);
+        String content = "Your OTP code is: " + otp + ". It expires in 5 minutes.";
+        boolean sent = mailSenderService.sendMail(receivedEmail, subject, content);
 
-            return otpForgotPasswordMapper.toOtpResponseDto(newOtpForgotPassword);
+        if (sent) {
+            LocalDateTime expiryAt = LocalDateTime.now().plusSeconds(OTP_TTL_SECONDS);
+            OtpCache otpCache = OtpCache.builder()
+                    .email(receivedEmail)
+                    .otpCode(otp)
+                    .expiryAt(expiryAt)
+                    .build();
+            otpCacheRepository.saveOtp(receivedEmail, otpCache, OTP_TTL_SECONDS);
+            return OtpResponseDto.builder()
+                    .otpCode(otp)
+                    .expiryDateOtpCode(expiryAt)
+                    .build();
         }
         return null;
     }
 
     @Override
-    public VerifiedOtpCodeResponseDto verifyOtpCode(String otpCode) {
-
-        OtpForgotPassword otpForgotPassword = otpForgotPasswordRepository.findByOtpCode(otpCode);
-        if (otpForgotPassword == null) {
+    public VerifiedOtpCodeResponseDto verifyOtpCode(String email, String otpCode) {
+        OtpCache otpCache = otpCacheRepository.getOtp(email);
+        if (otpCache == null) {
             throw new NotFoundException(ErrorMessage.Auth.OTP_CODE_NOT_FOUND, new String[]{otpCode});
         }
-
-        if (otpForgotPassword.getVerifiedOtpCode() == Boolean.TRUE) {
-            throw new BadRequestException(ErrorMessage.Auth.UNAUTHENTICATED);
+        if (!otpCache.getOtpCode().equals(otpCode)) {
+            throw new BadRequestException(ErrorMessage.Auth.OTP_CODE_NOT_FOUND);
+        }
+        // TTL handles expiry, but double-check
+        if (LocalDateTime.now().isAfter(otpCache.getExpiryAt())) {
+            otpCacheRepository.deleteOtp(email);
+            throw new BadRequestException(ErrorMessage.Auth.OTP_CODE_EXPIRED);
         }
 
-        if (otpForgotPassword.getOtpCode().equals(otpCode)) {
-            String tokenChangePassword = UUID.randomUUID().toString() + System.currentTimeMillis();
-            LocalDateTime expiryDateToken = LocalDateTime.now().plusMinutes(5);
-            otpForgotPassword.setVerifiedOtpCode(true);
-            otpForgotPassword.setTokenChangePassword(tokenChangePassword);
-            otpForgotPassword.setExpiryDateToken(expiryDateToken);
+        String token = UUID.randomUUID().toString() + System.currentTimeMillis();
+        LocalDateTime tokenExpiry = LocalDateTime.now().plusSeconds(TOKEN_TTL_SECONDS);
 
-            otpForgotPasswordRepository.save(otpForgotPassword);
-            return new VerifiedOtpCodeResponseDto(tokenChangePassword, expiryDateToken);
-        }
+        OtpTokenCache tokenCache = OtpTokenCache.builder()
+                .email(email)
+                .expiryAt(tokenExpiry)
+                .build();
+        otpCacheRepository.saveToken(token, tokenCache, TOKEN_TTL_SECONDS);
+        otpCacheRepository.deleteOtp(email); // invalidate OTP after use
 
-        return null;
+        return new VerifiedOtpCodeResponseDto(token, tokenExpiry);
     }
 
     @Override
-    public boolean confirmNewPassword(ConfirmNewPasswordRequestDto confirmNewPasswordRequestDto) {
+    public boolean confirmNewPassword(ConfirmNewPasswordRequestDto requestDto) {
+        String token = requestDto.getTokenChangePassword();
+        String newPassword = requestDto.getNewPassword();
+        String confirmNewPassword = requestDto.getConfirmNewPassword();
 
-        String token = confirmNewPasswordRequestDto.getTokenChangePassword();
-        String newPassword = confirmNewPasswordRequestDto.getNewPassword();
-        String confirmNewPassword = confirmNewPasswordRequestDto.getConfirmNewPassword();
-        OtpForgotPassword otpForgotPassword = otpForgotPasswordRepository.findByTokenChangePassword(confirmNewPasswordRequestDto.getTokenChangePassword());
-        if (otpForgotPassword == null) {
+        OtpTokenCache tokenCache = otpCacheRepository.getToken(token);
+        if (tokenCache == null) {
             throw new NotFoundException(ErrorMessage.Auth.OTP_CODE_NOT_FOUND, new String[]{token});
         }
-
-        if (otpForgotPassword.getTokenChangePassword().equals(token)) {
-            if (newPassword.equals(confirmNewPassword)) {
-                userService.changePassword(otpForgotPassword.getUser().getEmail(), newPassword, confirmNewPassword);
-                otpForgotPasswordRepository.delete(otpForgotPassword);
-                return true;
-            }
+        if (LocalDateTime.now().isAfter(tokenCache.getExpiryAt())) {
+            otpCacheRepository.deleteToken(token);
+            throw new BadRequestException(ErrorMessage.Auth.OTP_CODE_EXPIRED);
         }
-
-        return false;
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new BadRequestException(ErrorMessage.Validation.PASSWORD_NOT_MATCH);
+        }
+        userService.changePassword(tokenCache.getEmail(), newPassword, confirmNewPassword);
+        otpCacheRepository.deleteToken(token);
+        return true;
     }
 }

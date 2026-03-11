@@ -8,38 +8,29 @@ import com.hit.employee_management_spring.domain.dto.request.pagination.Paginati
 import com.hit.employee_management_spring.domain.dto.request.pagination.PagingMetadata;
 import com.hit.employee_management_spring.domain.dto.response.UserResponseDto;
 import com.hit.employee_management_spring.domain.entity.Role;
-import com.hit.employee_management_spring.domain.entity.TokenBlacklist;
 import com.hit.employee_management_spring.domain.entity.User;
-import com.hit.employee_management_spring.domain.entity.UserSession;
 import com.hit.employee_management_spring.domain.mapper.UserMapper;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
 import com.hit.employee_management_spring.exception.ForbiddenException;
 import com.hit.employee_management_spring.exception.NotFoundException;
 import com.hit.employee_management_spring.repository.RoleRepository;
-import com.hit.employee_management_spring.repository.TokenBlacklistRepository;
+import com.hit.employee_management_spring.repository.TokenBlacklistCacheRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
-import com.hit.employee_management_spring.repository.UserSessionRepository;
 import com.hit.employee_management_spring.security.UserPrincipal;
 import com.hit.employee_management_spring.service.IUserService;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.hit.employee_management_spring.constant.ErrorMessage.Validation.FIELD_NOT_BLANK;
 
 @Service
 @RequiredArgsConstructor
@@ -48,8 +39,7 @@ public class IUserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserSessionRepository userSessionRepository;
-    private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final TokenBlacklistCacheRepository tokenBlacklistCacheRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
 
@@ -95,28 +85,10 @@ public class IUserServiceImpl implements IUserService {
             throw new BadRequestException(ErrorMessage.Auth.BOTH_NEW_PASSWORD_NOT_MATCH);
         }
 
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        user.setPassword(passwordEncoder.encode(newPassword));
-        List<UserSession> userSessionList = userSessionRepository.findAllByUser(user);
-        userSessionList.forEach(userSession -> {
-            TokenBlacklist accessTokenBlacklist = new TokenBlacklist();
-            accessTokenBlacklist.setToken(userSession.getAccessToken());
-            accessTokenBlacklist.setTypeToken(TypeToken.ACCESS_TOKEN);
-            accessTokenBlacklist.setExpiryDate(LocalDateTime.now().plusDays(7));
-
-            TokenBlacklist refreshTokenBlacklist = new TokenBlacklist();
-            refreshTokenBlacklist.setToken(userSession.getAccessToken());
-            refreshTokenBlacklist.setTypeToken(TypeToken.ACCESS_TOKEN);
-            refreshTokenBlacklist.setExpiryDate(LocalDateTime.now().plusDays(7));
-
-            tokenBlacklistRepository.save(accessTokenBlacklist);
-            tokenBlacklistRepository.save(refreshTokenBlacklist);
-
-            userSessionRepository.delete(userSession);
-        });
-
-        return null;
+        return userMapper.toUserResponseDto(user);
     }
 
     @Override
@@ -145,7 +117,6 @@ public class IUserServiceImpl implements IUserService {
 
         int pageNum = requestDto.getPageNum();
         int pageSize = requestDto.getPageSize();
-        String keyword = requestDto.getKeyWords();
 
         Sort sort;
         if (requestDto.getIsAscending()) {
@@ -163,7 +134,7 @@ public class IUserServiceImpl implements IUserService {
         pagingMetadata.setPageNum(pageNum);
         pagingMetadata.setPageSize(pageSize);
         pagingMetadata.setTotalPages(userPage.getTotalPages());
-        pagingMetadata.setTotalElements(userResponseDtoList.stream().count());
+        pagingMetadata.setTotalElements(userPage.getTotalElements());
         pagingMetadata.setSortBy(requestDto.getSortBy());
         pagingMetadata.setSortType(requestDto.getIsAscending() ? SortType.ASC.name() : SortType.DESC.name());
 

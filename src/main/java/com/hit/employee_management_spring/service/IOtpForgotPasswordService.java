@@ -6,14 +6,8 @@ import com.hit.employee_management_spring.domain.dto.response.VerifiedOtpCodeRes
 import com.hit.employee_management_spring.domain.entity.User;
 
 public interface IOtpForgotPasswordService {
-
-    public String generateOtpCode(User user);
-
-    public OtpResponseDto sendOtpCode(String receivedEmail);
-
-    public VerifiedOtpCodeResponseDto verifyOtpCode(String otpCode);
-
-    public boolean confirmNewPassword(ConfirmNewPasswordRequestDto  confirmNewPasswordRequestDto);
-
-
+    String generateOtpCode(User user);
+    OtpResponseDto sendOtpCode(String receivedEmail);
+    VerifiedOtpCodeResponseDto verifyOtpCode(String email, String otpCode);
+    boolean confirmNewPassword(ConfirmNewPasswordRequestDto requestDto);
 }

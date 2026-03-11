@@ -3,13 +3,17 @@ package com.hit.employee_management_spring.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hit.employee_management_spring.base.RestData;
 import com.hit.employee_management_spring.constant.ErrorMessage;
+import com.hit.employee_management_spring.domain.entity.User;
 import com.hit.employee_management_spring.exception.BadRequestException;
+import com.hit.employee_management_spring.repository.TokenBlacklistCacheRepository;
+import com.hit.employee_management_spring.repository.UserCacheRepository;
 import com.hit.employee_management_spring.service.ICustomUserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,12 +26,15 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class JwtAuthenticationFilterChain extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final ICustomUserDetailService  customUserDetailService;
+    private final ICustomUserDetailService customUserDetailService;
+    private final UserCacheRepository userCacheRepository;
     private final MessageSource messageSource;
     private final ObjectMapper objectMapper;
+    private final TokenBlacklistCacheRepository tokenBlacklistCacheRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -36,8 +43,22 @@ public class JwtAuthenticationFilterChain extends OncePerRequestFilter {
 
         try {
             if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
+                if (tokenBlacklistCacheRepository.isBlacklisted(jwt)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    String message = messageSource.getMessage(ErrorMessage.Auth.UNAUTHENTICATED, null, request.getLocale());
+                    RestData restData = RestData.error(message);
+                    response.getOutputStream().write(objectMapper.writeValueAsString(restData).getBytes());
+                    return;
+                }
                 String username = jwtTokenProvider.extractUsernameByToken(jwt);
-                UserPrincipal userPrincipal = customUserDetailService.loadUserByUsername(username);
+                User user = userCacheRepository.get(username);
+                UserPrincipal userPrincipal;
+                if (user == null) {
+                    userPrincipal = (UserPrincipal) customUserDetailService.loadUserByUsername(username);
+                } else {
+                    userPrincipal = UserPrincipal.create(user);
+                }
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -54,22 +75,18 @@ public class JwtAuthenticationFilterChain extends OncePerRequestFilter {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             RestData restData = RestData.error(message);
             response.getOutputStream().write(objectMapper.writeValueAsString(restData).getBytes());
-            e.printStackTrace();
+            log.error("JWT filter error", e);
             return;
         }
 
-
         filterChain.doFilter(request, response);
-
     }
-    public static String extractTokenByRequest(HttpServletRequest request) {
 
+    public static String extractTokenByRequest(HttpServletRequest request) {
         String token = null;
         if (request.getHeader("Authorization") != null) {
             token = request.getHeader("Authorization").substring(7);
         }
         return token;
     }
-
-
 }
