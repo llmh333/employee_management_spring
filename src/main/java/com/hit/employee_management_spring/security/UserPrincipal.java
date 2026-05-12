@@ -1,6 +1,6 @@
 package com.hit.employee_management_spring.security;
 
-import com.hit.employee_management_spring.constant.Gender;
+import com.hit.employee_management_spring.enums.Gender;
 import com.hit.employee_management_spring.domain.entity.Role;
 import com.hit.employee_management_spring.domain.entity.User;
 import lombok.Getter;

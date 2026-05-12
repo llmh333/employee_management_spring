@@ -1,6 +1,6 @@
 package com.hit.employee_management_spring.domain.dto.request.pagination;
 
-import com.hit.employee_management_spring.constant.SortByConstant;
+import com.hit.employee_management_spring.enums.SortByConstant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

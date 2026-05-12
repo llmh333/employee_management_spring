@@ -1,8 +1,10 @@
 package com.hit.employee_management_spring.service.impl;
 
 import com.hit.employee_management_spring.constant.*;
+import com.hit.employee_management_spring.enums.*;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.UpdateUserRequestDto;
+import com.hit.employee_management_spring.domain.dto.request.UpdateUserRoleRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationFullRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PaginationResponseDto;
 import com.hit.employee_management_spring.domain.dto.request.pagination.PagingMetadata;
@@ -69,7 +71,24 @@ public class IUserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserResponseDto changePassword(String email, String newPassword, String confirmNewPassword) {
+    public UserResponseDto updateUserRole(UpdateUserRoleRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getUserId()).orElseThrow(
+                () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{requestDto.getUserId()})
+        );
+
+        List<Role> roles = new ArrayList<>();
+        for (String roleName : requestDto.getRoleNames()) {
+            Role role = roleRepository.findByName(roleName);
+            if (role != null) {
+                roles.add(role);
+            }
+        }
+        user.setRoles(roles);
+        return userMapper.toUserResponseDto(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponseDto changePassword(String email, String oldPassword, String newPassword, String confirmNewPassword) {
 
         User user = userRepository.findByEmail(email);
         if (user == null) {
@@ -81,6 +100,10 @@ public class IUserServiceImpl implements IUserService {
             throw new ForbiddenException(ErrorMessage.FORBIDDEN);
         }
 
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadRequestException(ErrorMessage.Auth.USERNAME_OR_PASSWORD_WRONG);
+        }
+
         if (!newPassword.equals(confirmNewPassword)) {
             throw new BadRequestException(ErrorMessage.Auth.BOTH_NEW_PASSWORD_NOT_MATCH);
         }
@@ -88,6 +111,17 @@ public class IUserServiceImpl implements IUserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
+        return userMapper.toUserResponseDto(user);
+    }
+
+    @Override
+    public UserResponseDto resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_EMAIL, new String[]{email});
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
         return userMapper.toUserResponseDto(user);
     }
 
@@ -138,7 +172,7 @@ public class IUserServiceImpl implements IUserService {
         pagingMetadata.setSortBy(requestDto.getSortBy());
         pagingMetadata.setSortType(requestDto.getIsAscending() ? SortType.ASC.name() : SortType.DESC.name());
 
-        return new PaginationResponseDto(pagingMetadata, userResponseDtoList);
+        return new PaginationResponseDto<>(pagingMetadata, userResponseDtoList);
     }
 
     @Override
@@ -147,15 +181,15 @@ public class IUserServiceImpl implements IUserService {
                 () -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID, new String[]{requestDto.getId()})
         );
 
-        if (!requestDto.getFirstName().trim().isEmpty()) {
+        if (requestDto.getFirstName() != null && !requestDto.getFirstName().trim().isEmpty()) {
             user.setFirstName(requestDto.getFirstName());
         }
 
-        if (!requestDto.getLastName().trim().isEmpty()) {
+        if (requestDto.getLastName() != null && !requestDto.getLastName().trim().isEmpty()) {
             user.setLastName(requestDto.getLastName());
         }
 
-        if (!requestDto.getGender().trim().isEmpty()) {
+        if (requestDto.getGender() != null && !requestDto.getGender().trim().isEmpty()) {
             if (Gender.FEMALE.name().equals(requestDto.getGender())) {
                 user.setGender(Gender.FEMALE);
             } else if (Gender.MALE.name().equals(requestDto.getGender())) {

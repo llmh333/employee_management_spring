@@ -1,7 +1,7 @@
 package com.hit.employee_management_spring.security;
 
 import com.hit.employee_management_spring.constant.ErrorMessage;
-import com.hit.employee_management_spring.constant.TypeToken;
+import com.hit.employee_management_spring.enums.TypeToken;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

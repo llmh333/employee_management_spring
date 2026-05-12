@@ -1,6 +1,5 @@
 package com.hit.employee_management_spring.service.impl;
 
-import com.hit.employee_management_spring.constant.EmployeeStatus;
 import com.hit.employee_management_spring.constant.ErrorMessage;
 import com.hit.employee_management_spring.domain.dto.request.CreateEmployeeRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.UpdateEmployeeRequestDto;
@@ -11,6 +10,9 @@ import com.hit.employee_management_spring.domain.dto.response.EmployeeResponseDt
 import com.hit.employee_management_spring.domain.entity.Employee;
 import com.hit.employee_management_spring.domain.entity.Position;
 import com.hit.employee_management_spring.domain.entity.User;
+import com.hit.employee_management_spring.domain.mapper.EmployeeMapper;
+import com.hit.employee_management_spring.enums.EmployeeStatus;
+import com.hit.employee_management_spring.enums.SortByConstant;
 import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.NotFoundException;
 import com.hit.employee_management_spring.repository.EmployeeRepository;
@@ -26,9 +28,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Year;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -38,42 +41,16 @@ public class IEmployeeServiceImpl implements IEmployeeService {
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final PositionRepository positionRepository;
-
-    private static final AtomicLong employeeCodeCounter = new AtomicLong(
-            System.currentTimeMillis() % 100000
-    );
+    private final EmployeeMapper employeeMapper;
 
     private String generateEmployeeCode() {
-        int year = Year.now().getValue();
-        long seq = employeeCodeCounter.incrementAndGet();
-        return String.format("EMP-%d-%05d", year, seq % 100000);
-    }
-
-    private EmployeeResponseDto toDto(Employee employee) {
-        EmployeeResponseDto dto = new EmployeeResponseDto();
-        dto.setId(employee.getId());
-        dto.setEmployeeCode(employee.getEmployeeCode());
-        dto.setHireDate(employee.getHireDate());
-        dto.setStatus(employee.getStatus());
-        dto.setNotes(employee.getNotes());
-        dto.setCreatedAt(employee.getCreatedAt());
-        dto.setUpdatedAt(employee.getUpdatedAt());
-        if (employee.getUser() != null) {
-            dto.setUserId(employee.getUser().getId());
-            dto.setUsername(employee.getUser().getUsername());
-            dto.setFirstName(employee.getUser().getFirstName());
-            dto.setLastName(employee.getUser().getLastName());
-            dto.setEmail(employee.getUser().getEmail());
-        }
-        if (employee.getPosition() != null) {
-            dto.setPositionId(employee.getPosition().getId());
-            dto.setPositionTitle(employee.getPosition().getTitle());
-            if (employee.getPosition().getDepartment() != null) {
-                dto.setDepartmentId(employee.getPosition().getDepartment().getId());
-                dto.setDepartmentName(employee.getPosition().getDepartment().getName());
-            }
-        }
-        return dto;
+        String code;
+        do {
+            int year = Year.now().getValue();
+            String uniquePart = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            code = String.format("EMP-%d-%s", year, uniquePart);
+        } while (employeeRepository.existsByEmployeeCode(code));
+        return code;
     }
 
     @Override
@@ -84,19 +61,25 @@ public class IEmployeeServiceImpl implements IEmployeeService {
         }
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.User.NOT_FOUND_BY_ID,
-                        new String[]{requestDto.getUserId()}));
+                        new String[] { requestDto.getUserId() }));
         Position position = positionRepository.findById(requestDto.getPositionId())
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.Position.NOT_FOUND,
-                        new String[]{requestDto.getPositionId().toString()}));
+                        new String[] { requestDto.getPositionId().toString() }));
+
+        BigDecimal actualSalary = requestDto.getActualSalary() != null ? requestDto.getActualSalary()
+                : position.getBaseSalary();
+
         Employee employee = Employee.builder()
                 .employeeCode(generateEmployeeCode())
                 .hireDate(requestDto.getHireDate())
                 .status(EmployeeStatus.ACTIVE)
                 .notes(requestDto.getNotes())
+                .actualSalary(actualSalary)
                 .user(user)
                 .position(position)
                 .build();
-        return toDto(employeeRepository.save(employee));
+
+        return employeeMapper.toDto(employeeRepository.save(employee));
     }
 
     @Override
@@ -104,11 +87,12 @@ public class IEmployeeServiceImpl implements IEmployeeService {
     public EmployeeResponseDto update(UpdateEmployeeRequestDto requestDto) {
         Employee employee = employeeRepository.findById(requestDto.getId())
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.Employee.NOT_FOUND,
-                        new String[]{requestDto.getId().toString()}));
+                        new String[] { requestDto.getId().toString() }));
+
         if (requestDto.getPositionId() != null) {
             Position position = positionRepository.findById(requestDto.getPositionId())
                     .orElseThrow(() -> new NotFoundException(ErrorMessage.Position.NOT_FOUND,
-                            new String[]{requestDto.getPositionId().toString()}));
+                            new String[] { requestDto.getPositionId().toString() }));
             employee.setPosition(position);
         }
         if (requestDto.getHireDate() != null) {
@@ -120,34 +104,41 @@ public class IEmployeeServiceImpl implements IEmployeeService {
         if (requestDto.getNotes() != null) {
             employee.setNotes(requestDto.getNotes());
         }
-        return toDto(employeeRepository.save(employee));
+        if (requestDto.getActualSalary() != null) {
+            employee.setActualSalary(requestDto.getActualSalary());
+        }
+        return employeeMapper.toDto(employeeRepository.save(employee));
     }
 
     @Override
     @Transactional
     public boolean delete(Long id) {
-        if (!employeeRepository.existsById(id)) {
-            throw new NotFoundException(ErrorMessage.Employee.NOT_FOUND, new String[]{id.toString()});
-        }
-        employeeRepository.deleteById(id);
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(
+                        () -> new NotFoundException(ErrorMessage.Employee.NOT_FOUND, new String[] { id.toString() }));
+        employee.setStatus(EmployeeStatus.TERMINATED);
+        employeeRepository.save(employee);
         return true;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EmployeeResponseDto getById(Long id) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(ErrorMessage.Employee.NOT_FOUND, new String[]{id.toString()}));
-        return toDto(employee);
+                .orElseThrow(
+                        () -> new NotFoundException(ErrorMessage.Employee.NOT_FOUND, new String[] { id.toString() }));
+        return employeeMapper.toDto(employee);
     }
 
     @Override
-    public PaginationResponseDto getAll(PaginationFullRequestDto requestDto) {
+    @Transactional(readOnly = true)
+    public PaginationResponseDto<?> getAll(PaginationFullRequestDto requestDto) {
         Sort sort = requestDto.getIsAscending()
-                ? Sort.by("id").ascending()
-                : Sort.by("id").descending();
+                ? Sort.by(requestDto.getSortBy(SortByConstant.EMPLOYEE)).ascending()
+                : Sort.by(requestDto.getSortBy(SortByConstant.EMPLOYEE)).descending();
         Pageable pageable = PageRequest.of(requestDto.getPageNum(), requestDto.getPageSize(), sort);
         Page<Employee> page = employeeRepository.searchEmployees(requestDto.getKeyWords(), pageable);
-        List<EmployeeResponseDto> dtos = page.getContent().stream().map(this::toDto).toList();
+        List<EmployeeResponseDto> dtos = page.getContent().stream().map(employeeMapper::toDto).toList();
 
         PagingMetadata meta = new PagingMetadata();
         meta.setPageNum(requestDto.getPageNum());
@@ -157,6 +148,6 @@ public class IEmployeeServiceImpl implements IEmployeeService {
         meta.setSortBy(requestDto.getSortBy());
         meta.setSortType(requestDto.getIsAscending() ? "ASC" : "DESC");
 
-        return new PaginationResponseDto(meta, dtos);
+        return new PaginationResponseDto<>(meta, dtos);
     }
 }

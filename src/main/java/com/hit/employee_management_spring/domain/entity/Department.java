@@ -28,6 +28,6 @@ public class Department extends DateAuditing {
     @Column(length = 100)
     private String location;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "department")
     private List<Position> positions;
 }

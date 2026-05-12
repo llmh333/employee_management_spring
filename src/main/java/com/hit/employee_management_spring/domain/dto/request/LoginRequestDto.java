@@ -3,13 +3,13 @@ package com.hit.employee_management_spring.domain.dto.request;
 import com.hit.employee_management_spring.constant.ErrorMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Login request payload")
 public class LoginRequestDto {
 

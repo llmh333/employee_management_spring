@@ -1,7 +1,7 @@
 package com.hit.employee_management_spring.domain.entity;
 
 import com.hit.employee_management_spring.audit.DateAuditing;
-import com.hit.employee_management_spring.constant.Gender;
+import com.hit.employee_management_spring.enums.Gender;
 import jakarta.persistence.*;
 import lombok.*;
 

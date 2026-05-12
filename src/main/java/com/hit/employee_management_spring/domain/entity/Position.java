@@ -33,6 +33,6 @@ public class Position extends DateAuditing {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
-    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "position")
     private List<Employee> employees;
 }

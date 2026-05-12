@@ -122,7 +122,7 @@ public class IOtpForgotPasswordServiceImpl implements IOtpForgotPasswordService 
         if (!newPassword.equals(confirmNewPassword)) {
             throw new BadRequestException(ErrorMessage.Validation.PASSWORD_NOT_MATCH);
         }
-        userService.changePassword(tokenCache.getEmail(), newPassword, confirmNewPassword);
+        userService.resetPassword(tokenCache.getEmail(), newPassword);
         otpCacheRepository.deleteToken(token);
         return true;
     }

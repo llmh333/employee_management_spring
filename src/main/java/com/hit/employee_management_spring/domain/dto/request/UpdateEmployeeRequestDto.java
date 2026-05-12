@@ -1,10 +1,12 @@
 package com.hit.employee_management_spring.domain.dto.request;
 
 import com.hit.employee_management_spring.constant.ErrorMessage;
-import com.hit.employee_management_spring.constant.EmployeeStatus;
+import com.hit.employee_management_spring.enums.EmployeeStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -16,4 +18,5 @@ public class UpdateEmployeeRequestDto {
     private LocalDate hireDate;
     private EmployeeStatus status;
     private String notes;
+    private BigDecimal actualSalary;
 }

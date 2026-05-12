@@ -25,6 +25,7 @@ public class UrlConstant {
         public static final String DELETE_USER_BY_ID = PRE_FIX + "/{userId}";
         public static final String GET_ALL_USER = PRE_FIX;
         public static final String GET_USER_BY_ID = PRE_FIX + "/{userId}";
+        public static final String UPDATE_USER_ROLE = PRE_FIX + "/role";
     }
 
     public static class Department {

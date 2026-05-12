@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsByUserId(String userId);
     boolean existsByEmployeeCode(String employeeCode);
+    boolean existsByPositionId(Long positionId);
 
     @Query("SELECT e FROM Employee e JOIN e.user u JOIN e.position p JOIN p.department d " +
            "WHERE (:keyword IS NULL OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +

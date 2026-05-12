@@ -1,8 +1,10 @@
 package com.hit.employee_management_spring.domain.dto.response;
 
-import com.hit.employee_management_spring.constant.EmployeeStatus;
+import com.hit.employee_management_spring.enums.EmployeeStatus;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -14,6 +16,7 @@ public class EmployeeResponseDto {
     private LocalDate hireDate;
     private EmployeeStatus status;
     private String notes;
+    private BigDecimal actualSalary;
     private String userId;
     private String username;
     private String firstName;

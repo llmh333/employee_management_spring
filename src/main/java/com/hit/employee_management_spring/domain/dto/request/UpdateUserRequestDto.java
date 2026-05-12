@@ -1,15 +1,18 @@
 package com.hit.employee_management_spring.domain.dto.request;
 
-
 import com.hit.employee_management_spring.constant.ErrorMessage;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UpdateUserRequestDto {
 
     @NotBlank(message = ErrorMessage.Validation.FIELD_NOT_BLANK)

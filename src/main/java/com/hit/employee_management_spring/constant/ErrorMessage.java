@@ -35,10 +35,12 @@ public class ErrorMessage {
     public static class Department {
         public static final String NOT_FOUND = "exception.department.not.found";
         public static final String NAME_ALREADY_EXIST = "exception.department.name.already.exist";
+        public static final String DELETE_CONSTRAINT = "exception.department.delete.constraint";
     }
 
     public static class Position {
         public static final String NOT_FOUND = "exception.position.not.found";
+        public static final String DELETE_CONSTRAINT = "exception.position.delete.constraint";
     }
 
     public static class Employee {

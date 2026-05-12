@@ -5,9 +5,11 @@ import com.hit.employee_management_spring.domain.dto.request.CreateDepartmentReq
 import com.hit.employee_management_spring.domain.dto.request.UpdateDepartmentRequestDto;
 import com.hit.employee_management_spring.domain.dto.response.DepartmentResponseDto;
 import com.hit.employee_management_spring.domain.entity.Department;
+import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.DuplicateDataException;
 import com.hit.employee_management_spring.exception.NotFoundException;
 import com.hit.employee_management_spring.repository.DepartmentRepository;
+import com.hit.employee_management_spring.repository.PositionRepository;
 import com.hit.employee_management_spring.service.IDepartmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,6 +24,7 @@ import java.util.List;
 public class IDepartmentServiceImpl implements IDepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final PositionRepository positionRepository;
 
     private DepartmentResponseDto toDto(Department dept) {
         DepartmentResponseDto dto = new DepartmentResponseDto();
@@ -67,6 +70,9 @@ public class IDepartmentServiceImpl implements IDepartmentService {
     public boolean delete(Long id) {
         if (!departmentRepository.existsById(id)) {
             throw new NotFoundException(ErrorMessage.Department.NOT_FOUND, new String[]{id.toString()});
+        }
+        if (positionRepository.existsByDepartmentId(id)) {
+            throw new BadRequestException(ErrorMessage.Department.DELETE_CONSTRAINT);
         }
         departmentRepository.deleteById(id);
         return true;

@@ -1,7 +1,7 @@
 package com.hit.employee_management_spring.service.impl;
 
 import com.hit.employee_management_spring.constant.ErrorMessage;
-import com.hit.employee_management_spring.constant.RoleConstant;
+import com.hit.employee_management_spring.enums.RoleConstant;
 import com.hit.employee_management_spring.domain.dto.request.LoginRequestDto;
 import com.hit.employee_management_spring.domain.dto.request.RegisterUserRequestDto;
 import com.hit.employee_management_spring.domain.dto.response.LoginResponseDto;

@@ -8,21 +8,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Getter
 @Setter
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class NotFoundException extends RuntimeException {
-
-    private String message;
-    private String[] params;
-    private HttpStatus status;
-
+public class NotFoundException extends BaseException {
 
     public NotFoundException(String message) {
-        this.message = message;
-        this.status = HttpStatus.NOT_FOUND;
+        super(message);
     }
 
     public NotFoundException(String message, String[] params) {
-        this.message = message;
-        this.params = params;
-        this.status = HttpStatus.NOT_FOUND;
+        super(message, params);
     }
 }

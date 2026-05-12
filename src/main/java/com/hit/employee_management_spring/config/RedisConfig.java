@@ -20,8 +20,9 @@ public class RedisConfig {
 
         // 1. Tạo ObjectMapper và đăng ký JavaTimeModule
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // <--- Cứu tinh ở đây
-        // Tùy chọn: Ghi ngày tháng dạng chuỗi ISO (2024-01-05T10:00:00) thay vì Array số
+        objectMapper.registerModule(new JavaTimeModule());
+        // Tùy chọn: Ghi ngày tháng dạng chuỗi ISO (2024-01-05T10:00:00) thay vì Array
+        // số
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         // 2. Tạo Serializer với ObjectMapper đã cấu hình

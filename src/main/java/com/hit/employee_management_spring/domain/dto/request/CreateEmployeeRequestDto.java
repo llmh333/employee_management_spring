@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -17,4 +19,5 @@ public class CreateEmployeeRequestDto {
     @NotNull(message = ErrorMessage.Validation.FIELD_NOT_BLANK)
     private LocalDate hireDate;
     private String notes;
+    private BigDecimal actualSalary;
 }

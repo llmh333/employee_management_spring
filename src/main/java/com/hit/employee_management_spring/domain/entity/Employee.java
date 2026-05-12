@@ -1,10 +1,11 @@
 package com.hit.employee_management_spring.domain.entity;
 
-import com.hit.employee_management_spring.audit.DateAuditing;
-import com.hit.employee_management_spring.constant.EmployeeStatus;
+import com.hit.employee_management_spring.audit.FullAuditing;
+import com.hit.employee_management_spring.enums.EmployeeStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -14,7 +15,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Employee extends DateAuditing {
+public class Employee extends FullAuditing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +34,9 @@ public class Employee extends DateAuditing {
     @Column(length = 500)
     private String notes;
 
+    @Column(precision = 15, scale = 2)
+    private BigDecimal actualSalary;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
     private User user;
@@ -40,4 +44,7 @@ public class Employee extends DateAuditing {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")
     private Position position;
+
+    @Version
+    private Long version;
 }

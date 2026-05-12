@@ -9,19 +9,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Setter
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 
-public class BadRequestException extends RuntimeException {
-
-    private String message;
-    private String[] params;
-    private HttpStatus status;
+public class BadRequestException extends BaseException {
 
     public BadRequestException(String message) {
-        this.message = message;
-        this.status = HttpStatus.BAD_REQUEST;
+        super(message);
     }
 
     public BadRequestException(String message, String[] params) {
-        this.message = message;
-        this.params = params;
+        super(message, params);
     }
 }

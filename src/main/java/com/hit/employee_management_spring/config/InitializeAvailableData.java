@@ -1,9 +1,9 @@
 package com.hit.employee_management_spring.config;
 
-import com.hit.employee_management_spring.constant.Gender;
-import com.hit.employee_management_spring.constant.RoleConstant;
 import com.hit.employee_management_spring.domain.entity.Role;
 import com.hit.employee_management_spring.domain.entity.User;
+import com.hit.employee_management_spring.enums.Gender;
+import com.hit.employee_management_spring.enums.RoleConstant;
 import com.hit.employee_management_spring.repository.RoleRepository;
 import com.hit.employee_management_spring.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -39,7 +39,7 @@ public class InitializeAvailableData implements CommandLineRunner {
         roleUser.setName(RoleConstant.ROLE_USER.name());
 
         if (roleRepository.existsByName(RoleConstant.ROLE_ADMIN.name()) ||
-            roleRepository.existsByName(RoleConstant.ROLE_USER.name())) {
+                roleRepository.existsByName(RoleConstant.ROLE_USER.name())) {
 
             if (userRepository.existsByEmail("admin123@example.com")) {
                 log.info("Available data found. Skipping initialization...");
@@ -66,7 +66,6 @@ public class InitializeAvailableData implements CommandLineRunner {
         roles.add(roleAdmin);
         roles.add(roleUser);
         List<Role> defaultRoles = roleRepository.saveAll(roles);
-
 
         User user = new User();
         user.setUsername("admin123");

@@ -6,8 +6,10 @@ import com.hit.employee_management_spring.domain.dto.request.UpdatePositionReque
 import com.hit.employee_management_spring.domain.dto.response.PositionResponseDto;
 import com.hit.employee_management_spring.domain.entity.Department;
 import com.hit.employee_management_spring.domain.entity.Position;
+import com.hit.employee_management_spring.exception.BadRequestException;
 import com.hit.employee_management_spring.exception.NotFoundException;
 import com.hit.employee_management_spring.repository.DepartmentRepository;
+import com.hit.employee_management_spring.repository.EmployeeRepository;
 import com.hit.employee_management_spring.repository.PositionRepository;
 import com.hit.employee_management_spring.service.IPositionService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class IPositionServiceImpl implements IPositionService {
 
     private final PositionRepository positionRepository;
     private final DepartmentRepository departmentRepository;
+    private final EmployeeRepository employeeRepository;
 
     private PositionResponseDto toDto(Position position) {
         PositionResponseDto dto = new PositionResponseDto();
@@ -74,6 +77,9 @@ public class IPositionServiceImpl implements IPositionService {
     public boolean delete(Long id) {
         if (!positionRepository.existsById(id)) {
             throw new NotFoundException(ErrorMessage.Position.NOT_FOUND, new String[]{id.toString()});
+        }
+        if (employeeRepository.existsByPositionId(id)) {
+            throw new BadRequestException(ErrorMessage.Position.DELETE_CONSTRAINT);
         }
         positionRepository.deleteById(id);
         return true;
